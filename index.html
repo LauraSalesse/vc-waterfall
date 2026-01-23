@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VC Waterfall Model</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a365d 0%, #2d5a87 100%);
+            color: white;
+            padding: 30px 20px;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a365d;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* Share Classes Table */
+        .share-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+
+        .share-table th {
+            background: #f7fafc;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .share-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .share-table input,
+        .share-table select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .share-table .narrow {
+            width: 80px;
+        }
+
+        .share-table .medium {
+            width: 120px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3182ce;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2c5282;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-danger {
+            background: #fc8181;
+            color: white;
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-danger:hover {
+            background: #f56565;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        /* Results Section */
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 0;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        .toggle-btn {
+            padding: 8px 16px;
+            border: none;
+            background: white;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            background: #3182ce;
+            color: white;
+        }
+
+        .toggle-btn:not(.active):hover {
+            background: #f7fafc;
+        }
+
+        /* Results Table */
+        .results-wrapper {
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 800px;
+        }
+
+        .results-table th {
+            background: #1a365d;
+            color: white;
+            padding: 12px 10px;
+            text-align: right;
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+        }
+
+        .results-table th:first-child {
+            text-align: left;
+            position: sticky;
+            left: 0;
+            z-index: 2;
+        }
+
+        .results-table td {
+            padding: 10px;
+            text-align: right;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .results-table td:first-child {
+            text-align: left;
+            font-weight: 500;
+            background: #f7fafc;
+            position: sticky;
+            left: 0;
+        }
+
+        .results-table tbody tr:hover {
+            background: #f7fafc;
+        }
+
+        .results-table tbody tr:hover td:first-child {
+            background: #edf2f7;
+        }
+
+        .results-table .total-row {
+            font-weight: 600;
+            background: #edf2f7;
+        }
+
+        .results-table .total-row td:first-child {
+            background: #e2e8f0;
+        }
+
+        .results-table .carveout-row {
+            font-style: italic;
+            color: #718096;
+        }
+
+        .results-table .converted {
+            color: #38a169;
+        }
+
+        .subsection-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 30px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .moic-table td {
+            font-weight: 500;
+        }
+
+        .my-investment-section {
+            margin-top: 20px;
+        }
+
+        .my-investment-section .highlight-row {
+            background: #ebf8ff;
+        }
+
+        .my-investment-section .highlight-row td:first-child {
+            background: #bee3f8;
+        }
+
+        /* Charts */
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .chart-box {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a365d;
+            margin-bottom: 16px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 350px;
+        }
+
+        /* Conversion Indicator */
+        .conversion-info {
+            margin-top: 20px;
+            padding: 16px;
+            background: #f0fff4;
+            border-radius: 6px;
+            border-left: 4px solid #48bb78;
+        }
+
+        .conversion-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #276749;
+            margin-bottom: 8px;
+        }
+
+        .conversion-info ul {
+            list-style: none;
+            font-size: 13px;
+            color: #2f855a;
+        }
+
+        .conversion-info li {
+            padding: 4px 0;
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-group {
+                min-width: 100%;
+            }
+
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-wrapper {
+                height: 300px;
+            }
+        }
+
+        /* Preferred Terms Section */
+        .preferred-terms {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .preferred-terms-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 12px;
+        }
+
+        .pari-passu-explanation {
+            margin-top: 16px;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 6px;
+            border-left: 3px solid #3182ce;
+        }
+
+        .pari-passu-explanation p {
+            font-size: 13px;
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .pari-passu-explanation p:last-child {
+            margin-bottom: 0;
+        }
+
+        .pari-passu-note {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 8px;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 30px;
+        }
+
+        .btn-calculate {
+            padding: 14px 40px;
+            font-size: 16px;
+        }
+
+        /* Info tooltip */
+        .info-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: #cbd5e0;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 16px;
+            font-size: 11px;
+            margin-left: 4px;
+            cursor: help;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>VC Waterfall Model</h1>
+            <p>Analyze exit distributions across shareholders for venture capital investments</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- General Settings -->
+        <div class="section">
+            <h2 class="section-title">General Settings</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Display Currency</label>
+                    <select id="currency">
+                        <option value="$">$ (USD)</option>
+                        <option value="€">€ (EUR)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Minimum Exit Value</label>
+                    <input type="number" id="minExit" value="0" min="0" step="1000000">
+                </div>
+                <div class="form-group">
+                    <label>Maximum Exit Value</label>
+                    <input type="number" id="maxExit" value="100000000" min="0" step="1000000">
+                </div>
+                <div class="form-group">
+                    <label>Exit Value Increment</label>
+                    <input type="number" id="exitIncrement" value="10000000" min="1000000" step="1000000">
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction Costs -->
+        <div class="section">
+            <h2 class="section-title">Transaction Costs</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Fixed Legal Fees</label>
+                    <input type="number" id="legalFees" value="500000" min="0" step="10000">
+                </div>
+                <div class="form-group">
+                    <label>Fixed Banker Fees</label>
+                    <input type="number" id="bankerFees" value="1000000" min="0" step="10000">
+                </div>
+            </div>
+        </div>
+
+        <!-- Management Carve-out -->
+        <div class="section">
+            <h2 class="section-title">Management Carve-out</h2>
+            <div class="checkbox-group">
+                <input type="checkbox" id="carveoutEnabled">
+                <label for="carveoutEnabled">Enable management carve-out</label>
+            </div>
+            <div class="form-row" id="carveoutRow" style="margin-top: 16px; display: none;">
+                <div class="form-group">
+                    <label>Carve-out Amount</label>
+                    <input type="number" id="carveoutAmount" value="0" min="0" step="100000">
+                </div>
+            </div>
+        </div>
+
+        <!-- Cap Table -->
+        <div class="section">
+            <h2 class="section-title">Cap Table</h2>
+            <table class="share-table" id="shareTable">
+                <thead>
+                    <tr>
+                        <th>Class Name</th>
+                        <th>Shares Outstanding</th>
+                        <th>My Shares <span class="info-icon" title="Your personal ownership in this class">?</span></th>
+                        <th>Type</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="shareTableBody">
+                </tbody>
+            </table>
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="addShareClass()">+ Add Share Class</button>
+            </div>
+
+            <!-- Preferred Terms -->
+            <div class="preferred-terms" id="preferredTerms">
+                <h3 class="preferred-terms-title">Preferred Share Terms</h3>
+                <table class="share-table" id="preferredTable">
+                    <thead>
+                        <tr>
+                            <th>Class</th>
+                            <th>Issue Price / Share</th>
+                            <th>Liquidation Preference Multiple</th>
+                            <th>Seniority Rank <span class="info-icon" title="Lower rank = paid first (e.g., 1 is most senior)">?</span></th>
+                            <th>Pari Passu Group <span class="info-icon" title="Classes sharing proceeds pro-rata at same level">?</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="preferredTableBody">
+                    </tbody>
+                </table>
+                <div class="pari-passu-explanation">
+                    <p><strong>Pari Passu</strong> means "equal footing". Classes in the same pari passu group (e.g., both marked "A") will share available proceeds proportionally based on their liquidation preferences, rather than one being paid in full before the other.</p>
+                    <p class="pari-passu-note">Leave empty if not grouped. Classes in the same group must have the same seniority rank.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculate Button -->
+        <div class="action-buttons">
+            <button class="btn btn-primary btn-calculate" onclick="calculateWaterfall()">Calculate Waterfall</button>
+        </div>
+
+        <!-- Results Section -->
+        <div class="section hidden" id="resultsSection">
+            <div class="results-header">
+                <h2 class="section-title" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">Results</h2>
+                <div style="display: flex; gap: 16px; align-items: center;">
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" onclick="setDisplayMode('total')">Total Proceeds</button>
+                        <button class="toggle-btn" onclick="setDisplayMode('perShare')">Per Share</button>
+                    </div>
+                    <button class="btn btn-success" onclick="exportCSV()">Export CSV</button>
+                </div>
+            </div>
+
+            <div class="results-wrapper">
+                <table class="results-table" id="resultsTable">
+                    <thead id="resultsHead"></thead>
+                    <tbody id="resultsBody"></tbody>
+                </table>
+            </div>
+
+            <div class="conversion-info" id="conversionInfo">
+                <h4>Conversion Points</h4>
+                <ul id="conversionList"></ul>
+            </div>
+
+            <!-- MOIC Table -->
+            <h3 class="subsection-title">MOIC (Multiple on Invested Capital)</h3>
+            <div class="results-wrapper">
+                <table class="results-table moic-table" id="moicTable">
+                    <thead id="moicHead"></thead>
+                    <tbody id="moicBody"></tbody>
+                </table>
+            </div>
+
+            <!-- My Investment Section -->
+            <div class="my-investment-section" id="myInvestmentSection">
+                <h3 class="subsection-title">My Investment</h3>
+                <div class="results-wrapper">
+                    <table class="results-table" id="myInvestmentTable">
+                        <thead id="myInvestmentHead"></thead>
+                        <tbody id="myInvestmentBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-box">
+                    <h3 class="chart-title">Proceeds by Exit Value</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="proceedsChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <h3 class="chart-title">Multiple Achieved (Preferred Classes)</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="multipleChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let shareClasses = [];
+        let shareClassCounter = 0;
+        let results = null;
+        let displayMode = 'total';
+        let proceedsChart = null;
+        let multipleChart = null;
+
+        // Initialize with default share classes
+        document.addEventListener('DOMContentLoaded', () => {
+            addShareClass('Common', 8000000, 'common', { myShares: 0 });
+            addShareClass('Option Pool (Allocated)', 1000000, 'common', { myShares: 0, isOptionPool: true });
+            addShareClass('Series A', 2000000, 'preferred', { issuePrice: 5, seniority: 2, myShares: 0 });
+            addShareClass('Series B', 1500000, 'preferred', { issuePrice: 10, seniority: 1, myShares: 0 });
+
+            document.getElementById('carveoutEnabled').addEventListener('change', (e) => {
+                document.getElementById('carveoutRow').style.display = e.target.checked ? 'flex' : 'none';
+            });
+        });
+
+        function addShareClass(name = '', shares = '', type = 'common', options = {}) {
+            const id = ++shareClassCounter;
+            const shareClass = { id, name, shares, type, myShares: options.myShares || 0 };
+            if (options.issuePrice) shareClass.issuePrice = options.issuePrice;
+            if (options.seniority) shareClass.seniority = options.seniority;
+            if (options.liquidationMultiple) shareClass.liquidationMultiple = options.liquidationMultiple;
+            if (options.pariPassu) shareClass.pariPassu = options.pariPassu;
+            if (options.isOptionPool) shareClass.isOptionPool = true;
+            shareClasses.push(shareClass);
+            renderShareTable();
+            updatePreferredTerms();
+        }
+
+        function removeShareClass(id) {
+            shareClasses = shareClasses.filter(sc => sc.id !== id);
+            renderShareTable();
+            updatePreferredTerms();
+        }
+
+        function updateShareClass(id, field, value) {
+            const sc = shareClasses.find(s => s.id === id);
+            if (sc) {
+                sc[field] = value;
+                if (field === 'type') {
+                    updatePreferredTerms();
+                }
+            }
+        }
+
+        function renderShareTable() {
+            const tbody = document.getElementById('shareTableBody');
+            tbody.innerHTML = shareClasses.map(sc => `
+                <tr>
+                    <td>
+                        <input type="text" value="${sc.name}"
+                               onchange="updateShareClass(${sc.id}, 'name', this.value)"
+                               placeholder="Class name">
+                    </td>
+                    <td>
+                        <input type="number" value="${sc.shares}" min="0"
+                               onchange="updateShareClass(${sc.id}, 'shares', parseFloat(this.value) || 0)"
+                               placeholder="0">
+                    </td>
+                    <td>
+                        <input type="number" value="${sc.myShares || 0}" min="0"
+                               onchange="updateShareClass(${sc.id}, 'myShares', parseFloat(this.value) || 0)"
+                               placeholder="0">
+                    </td>
+                    <td>
+                        <select onchange="updateShareClass(${sc.id}, 'type', this.value)">
+                            <option value="common" ${sc.type === 'common' ? 'selected' : ''}>Common</option>
+                            <option value="preferred" ${sc.type === 'preferred' ? 'selected' : ''}>Preferred</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="btn btn-danger" onclick="removeShareClass(${sc.id})">Remove</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updatePreferredTerms() {
+            const preferredClasses = shareClasses.filter(sc => sc.type === 'preferred');
+            const tbody = document.getElementById('preferredTableBody');
+            const section = document.getElementById('preferredTerms');
+
+            if (preferredClasses.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+
+            tbody.innerHTML = preferredClasses.map((sc, idx) => {
+                // Initialize preferred terms if not exists
+                if (!sc.issuePrice) sc.issuePrice = 1;
+                if (!sc.liquidationMultiple) sc.liquidationMultiple = 1;
+                if (!sc.seniority) sc.seniority = idx + 1;
+                if (!sc.pariPassu) sc.pariPassu = '';
+
+                return `
+                    <tr>
+                        <td><strong>${sc.name || 'Unnamed'}</strong></td>
+                        <td>
+                            <input type="number" value="${sc.issuePrice}" min="0.01" step="0.01"
+                                   onchange="updateShareClass(${sc.id}, 'issuePrice', parseFloat(this.value) || 1)">
+                        </td>
+                        <td>
+                            <input type="number" value="${sc.liquidationMultiple}" min="0.1" step="0.1"
+                                   onchange="updateShareClass(${sc.id}, 'liquidationMultiple', parseFloat(this.value) || 1)">
+                        </td>
+                        <td>
+                            <input type="number" value="${sc.seniority}" min="1" step="1" class="narrow"
+                                   onchange="updateShareClass(${sc.id}, 'seniority', parseInt(this.value) || 1)">
+                        </td>
+                        <td>
+                            <input type="text" value="${sc.pariPassu}" class="narrow" placeholder="e.g. A"
+                                   onchange="updateShareClass(${sc.id}, 'pariPassu', this.value.trim())">
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function getInputs() {
+            const currency = document.getElementById('currency').value;
+            const minExit = parseFloat(document.getElementById('minExit').value) || 0;
+            const maxExit = parseFloat(document.getElementById('maxExit').value) || 100000000;
+            const exitIncrement = parseFloat(document.getElementById('exitIncrement').value) || 10000000;
+            const legalFees = parseFloat(document.getElementById('legalFees').value) || 0;
+            const bankerFees = parseFloat(document.getElementById('bankerFees').value) || 0;
+            const carveoutEnabled = document.getElementById('carveoutEnabled').checked;
+            const carveoutAmount = carveoutEnabled ? (parseFloat(document.getElementById('carveoutAmount').value) || 0) : 0;
+
+            // Read share class data from inputs
+            const classes = shareClasses.map(sc => ({
+                ...sc,
+                shares: parseFloat(sc.shares) || 0,
+                myShares: parseFloat(sc.myShares) || 0,
+                issuePrice: parseFloat(sc.issuePrice) || 1,
+                liquidationMultiple: parseFloat(sc.liquidationMultiple) || 1,
+                seniority: parseInt(sc.seniority) || 1,
+                pariPassu: sc.pariPassu || ''
+            }));
+
+            return {
+                currency,
+                minExit,
+                maxExit,
+                exitIncrement,
+                legalFees,
+                bankerFees,
+                carveoutEnabled,
+                carveoutAmount,
+                shareClasses: classes
+            };
+        }
+
+        function calculateWaterfall() {
+            const inputs = getInputs();
+            const { minExit, maxExit, exitIncrement, legalFees, bankerFees, carveoutAmount, shareClasses } = inputs;
+
+            // Validation
+            if (shareClasses.length === 0) {
+                alert('Please add at least one share class.');
+                return;
+            }
+
+            const totalShares = shareClasses.reduce((sum, sc) => sum + sc.shares, 0);
+            if (totalShares === 0) {
+                alert('Total shares must be greater than zero.');
+                return;
+            }
+
+            if (minExit > maxExit) {
+                alert('Minimum exit value cannot exceed maximum exit value.');
+                return;
+            }
+
+            // Calculate number of exit points based on increment
+            const exitPoints = Math.floor((maxExit - minExit) / exitIncrement) + 1;
+            if (exitPoints > 100) {
+                alert(`Too many exit points (${exitPoints}). Maximum is 100.\n\nPlease increase the exit increment or reduce the exit range.`);
+                return;
+            }
+
+            // Validate pari passu groups have same seniority
+            const preferredClasses = shareClasses.filter(sc => sc.type === 'preferred');
+            const pariPassuGroups = {};
+            preferredClasses.forEach(sc => {
+                if (sc.pariPassu) {
+                    if (!pariPassuGroups[sc.pariPassu]) {
+                        pariPassuGroups[sc.pariPassu] = [];
+                    }
+                    pariPassuGroups[sc.pariPassu].push(sc);
+                }
+            });
+
+            for (const [group, classes] of Object.entries(pariPassuGroups)) {
+                const seniorities = [...new Set(classes.map(sc => sc.seniority))];
+                if (seniorities.length > 1) {
+                    alert(`Pari passu group "${group}" has classes with different seniority ranks (${seniorities.join(', ')}).\n\nClasses in the same pari passu group must have the same seniority rank.`);
+                    return;
+                }
+            }
+
+            // Generate exit values
+            const exitValues = [];
+            for (let i = 0; i < exitPoints; i++) {
+                exitValues.push(minExit + exitIncrement * i);
+            }
+
+            // Calculate total shares for as-converted basis
+            const totalCommonShares = shareClasses
+                .filter(sc => sc.type === 'common')
+                .reduce((sum, sc) => sum + sc.shares, 0);
+
+            const totalPreferredShares = preferredClasses.reduce((sum, sc) => sum + sc.shares, 0);
+            const totalAsConverted = totalCommonShares + totalPreferredShares;
+
+            // Calculate liquidation preferences for each preferred class
+            const liquidationPrefs = {};
+            preferredClasses.forEach(sc => {
+                liquidationPrefs[sc.id] = sc.shares * sc.issuePrice * sc.liquidationMultiple;
+            });
+
+            // Results storage
+            results = {
+                exitValues,
+                distributions: {},
+                conversionPoints: {},
+                conversions: {},
+                inputs
+            };
+
+            // Initialize distributions
+            shareClasses.forEach(sc => {
+                results.distributions[sc.id] = [];
+                if (sc.type === 'preferred') {
+                    results.conversions[sc.id] = [];
+                }
+            });
+            results.distributions['carveout'] = [];
+
+            // Track conversion points (first exit value where conversion happens)
+            preferredClasses.forEach(sc => {
+                results.conversionPoints[sc.id] = null;
+            });
+
+            // Group preferred by seniority (compute once, reuse for each exit value)
+            const seniorityGroups = {};
+            preferredClasses.forEach(sc => {
+                const key = sc.seniority;
+                if (!seniorityGroups[key]) seniorityGroups[key] = [];
+                seniorityGroups[key].push(sc);
+            });
+            const sortedSeniorities = Object.keys(seniorityGroups).map(Number).sort((a, b) => a - b);
+
+            // Calculate for each exit value
+            exitValues.forEach((exitValue, exitIdx) => {
+                // Start with gross proceeds
+                let netProceeds = exitValue;
+
+                // Deduct transaction costs
+                netProceeds -= legalFees;
+                netProceeds -= bankerFees;
+                netProceeds = Math.max(0, netProceeds);
+
+                // Deduct carve-out
+                const carveoutPaid = Math.min(carveoutAmount, netProceeds);
+                netProceeds -= carveoutPaid;
+                results.distributions['carveout'].push(carveoutPaid);
+
+                // Iteratively determine which preferred classes convert
+                // A class converts if its value from converting > value from taking liq pref
+                let converters = new Set();
+                let stable = false;
+                let iterations = 0;
+
+                while (!stable && iterations < 50) {
+                    stable = true;
+                    iterations++;
+
+                    // For each preferred, decide if it should convert based on current state
+                    for (const sc of preferredClasses) {
+                        const liqPref = liquidationPrefs[sc.id];
+
+                        // Calculate value if taking liq pref (with current converter set)
+                        const valueIfLiqPref = calculateLiqPrefValue(
+                            sc, netProceeds, preferredClasses, converters,
+                            liquidationPrefs, seniorityGroups, sortedSeniorities
+                        );
+
+                        // Calculate value if converting (with current converter set)
+                        const valueIfConvert = calculateConvertValue(
+                            sc, netProceeds, preferredClasses, converters,
+                            liquidationPrefs, totalCommonShares, seniorityGroups, sortedSeniorities
+                        );
+
+                        const shouldConvert = valueIfConvert > valueIfLiqPref;
+                        const currentlyConverts = converters.has(sc.id);
+
+                        if (shouldConvert !== currentlyConverts) {
+                            if (shouldConvert) {
+                                converters.add(sc.id);
+                            } else {
+                                converters.delete(sc.id);
+                            }
+                            stable = false;
+                        }
+                    }
+                }
+
+                // Now calculate final distributions with determined converters
+                const distributions = {};
+                shareClasses.forEach(sc => {
+                    distributions[sc.id] = 0;
+                });
+
+                let remaining = netProceeds;
+
+                // Pay liquidation preferences by seniority (only to non-converters)
+                // Within each seniority level, classes share pari passu
+                for (const seniority of sortedSeniorities) {
+                    const group = seniorityGroups[seniority];
+
+                    // Get non-converting classes at this seniority
+                    const nonConvertersAtLevel = group.filter(sc => !converters.has(sc.id));
+
+                    if (nonConvertersAtLevel.length === 0) continue;
+
+                    // All classes at same seniority share pari passu based on liq pref
+                    const totalLiqPref = nonConvertersAtLevel.reduce(
+                        (sum, sc) => sum + liquidationPrefs[sc.id], 0
+                    );
+                    const payment = Math.min(totalLiqPref, remaining);
+
+                    // Distribute pro-rata within this seniority level
+                    nonConvertersAtLevel.forEach(sc => {
+                        const share = totalLiqPref > 0 ? liquidationPrefs[sc.id] / totalLiqPref : 0;
+                        distributions[sc.id] = share * payment;
+                    });
+
+                    remaining = Math.max(0, remaining - payment);
+                }
+
+                // Distribute residual to common pool (common + converted preferred)
+                const commonPoolShares = totalCommonShares +
+                    preferredClasses.filter(sc => converters.has(sc.id)).reduce((sum, sc) => sum + sc.shares, 0);
+
+                if (commonPoolShares > 0 && remaining > 0) {
+                    // Common shareholders
+                    shareClasses.filter(sc => sc.type === 'common').forEach(sc => {
+                        distributions[sc.id] = (sc.shares / commonPoolShares) * remaining;
+                    });
+
+                    // Converted preferred get their pro-rata share
+                    preferredClasses.filter(sc => converters.has(sc.id)).forEach(sc => {
+                        distributions[sc.id] = (sc.shares / commonPoolShares) * remaining;
+                    });
+                }
+
+                // Store results for this exit value
+                shareClasses.forEach(sc => {
+                    results.distributions[sc.id].push(distributions[sc.id]);
+                });
+
+                // Track conversion status
+                preferredClasses.forEach(sc => {
+                    results.conversions[sc.id].push(converters.has(sc.id));
+
+                    // Record first conversion point
+                    if (converters.has(sc.id) && results.conversionPoints[sc.id] === null) {
+                        results.conversionPoints[sc.id] = exitValue;
+                    }
+                });
+            });
+
+            // Helper: Calculate what a preferred class gets if it takes liq pref
+            function calculateLiqPrefValue(sc, netProceeds, preferredClasses, converters, liquidationPrefs, seniorityGroups, sortedSeniorities) {
+                let remaining = netProceeds;
+
+                for (const seniority of sortedSeniorities) {
+                    const group = seniorityGroups[seniority];
+
+                    // Non-converters at this level (excluding sc if it would convert)
+                    const nonConvertersAtLevel = group.filter(p =>
+                        p.id === sc.id || !converters.has(p.id)
+                    );
+
+                    if (nonConvertersAtLevel.length === 0) continue;
+
+                    const totalLiqPref = nonConvertersAtLevel.reduce(
+                        (sum, p) => sum + liquidationPrefs[p.id], 0
+                    );
+                    const payment = Math.min(totalLiqPref, remaining);
+
+                    // If this is sc's seniority level, calculate its share
+                    if (seniority === sc.seniority) {
+                        const share = totalLiqPref > 0 ? liquidationPrefs[sc.id] / totalLiqPref : 0;
+                        return share * payment;
+                    }
+
+                    remaining = Math.max(0, remaining - payment);
+                }
+
+                return 0;
+            }
+
+            // Helper: Calculate what a preferred class gets if it converts
+            function calculateConvertValue(sc, netProceeds, preferredClasses, converters, liquidationPrefs, totalCommonShares, seniorityGroups, sortedSeniorities) {
+                let remaining = netProceeds;
+
+                // Pay all non-converting liq prefs first (sc is converting, so exclude it)
+                for (const seniority of sortedSeniorities) {
+                    const group = seniorityGroups[seniority];
+
+                    // Non-converters at this level (sc is converting so exclude it)
+                    const nonConvertersAtLevel = group.filter(p =>
+                        p.id !== sc.id && !converters.has(p.id)
+                    );
+
+                    if (nonConvertersAtLevel.length === 0) continue;
+
+                    const totalLiqPref = nonConvertersAtLevel.reduce(
+                        (sum, p) => sum + liquidationPrefs[p.id], 0
+                    );
+                    remaining = Math.max(0, remaining - Math.min(totalLiqPref, remaining));
+                }
+
+                // Now sc gets its pro-rata share of residual
+                const converterShares = preferredClasses
+                    .filter(p => p.id === sc.id || converters.has(p.id))
+                    .reduce((sum, p) => sum + p.shares, 0);
+
+                const commonPool = totalCommonShares + converterShares;
+
+                if (commonPool > 0 && remaining > 0) {
+                    return (sc.shares / commonPool) * remaining;
+                }
+                return 0;
+            }
+
+            displayResults();
+
+            // Scroll to results
+            setTimeout(() => {
+                document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+
+        function displayResults() {
+            if (!results) return;
+
+            const { exitValues, distributions, inputs } = results;
+            const { currency, shareClasses, carveoutEnabled, carveoutAmount } = inputs;
+
+            // Show results section
+            document.getElementById('resultsSection').classList.remove('hidden');
+
+            // Build table header
+            const thead = document.getElementById('resultsHead');
+            thead.innerHTML = `
+                <tr>
+                    <th>Shareholder</th>
+                    ${exitValues.map(v => `<th>${currency}${formatNumber(v)}</th>`).join('')}
+                </tr>
+            `;
+
+            // Build table body
+            const tbody = document.getElementById('resultsBody');
+            let rows = [];
+
+            // Net proceeds row (after transaction costs)
+            const { legalFees, bankerFees } = inputs;
+            if (legalFees > 0 || bankerFees > 0) {
+                const netProceedsRow = exitValues.map(v => {
+                    const net = Math.max(0, v - legalFees - bankerFees);
+                    return `${currency}${formatNumber(net)}`;
+                });
+                rows.push(`
+                    <tr style="background: #f7fafc; font-style: italic; color: #718096;">
+                        <td>Net Proceeds (after fees)</td>
+                        ${netProceedsRow.map(v => `<td>${v}</td>`).join('')}
+                    </tr>
+                `);
+            }
+
+            // Carve-out row
+            if (carveoutEnabled && carveoutAmount > 0) {
+                const carveoutRow = exitValues.map((_, i) => {
+                    const value = distributions['carveout'][i];
+                    return displayMode === 'total' ?
+                        `${currency}${formatNumber(value)}` :
+                        '-';
+                });
+                rows.push(`
+                    <tr class="carveout-row">
+                        <td>Management Carve-out</td>
+                        ${carveoutRow.map(v => `<td>${v}</td>`).join('')}
+                    </tr>
+                `);
+            }
+
+            // Share class rows
+            shareClasses.forEach(sc => {
+                const isConverted = results.conversions && results.conversions[sc.id];
+                const rowData = exitValues.map((_, i) => {
+                    const value = distributions[sc.id][i];
+                    const converted = isConverted && isConverted[i];
+                    const displayValue = displayMode === 'total' ?
+                        `${currency}${formatNumber(value)}` :
+                        `${currency}${formatNumber(sc.shares > 0 ? value / sc.shares : 0, 2)}`;
+                    return { value: displayValue, converted };
+                });
+
+                rows.push(`
+                    <tr>
+                        <td>${sc.name || 'Unnamed'} ${sc.type === 'preferred' ? '(Pref)' : '(Common)'}</td>
+                        ${rowData.map(d => `<td class="${d.converted ? 'converted' : ''}">${d.value}</td>`).join('')}
+                    </tr>
+                `);
+            });
+
+            // Total row
+            const totals = exitValues.map((exitValue, i) => {
+                let total = distributions['carveout'][i];
+                shareClasses.forEach(sc => {
+                    total += distributions[sc.id][i];
+                });
+                return `${currency}${formatNumber(total)}`;
+            });
+
+            rows.push(`
+                <tr class="total-row">
+                    <td>Total Distributed</td>
+                    ${totals.map(v => `<td>${v}</td>`).join('')}
+                </tr>
+            `);
+
+            tbody.innerHTML = rows.join('');
+
+            // Conversion info
+            const conversionList = document.getElementById('conversionList');
+            const preferredClasses = shareClasses.filter(sc => sc.type === 'preferred');
+            const conversionItems = preferredClasses.map(sc => {
+                const point = results.conversionPoints[sc.id];
+                if (point !== null) {
+                    return `<li><strong>${sc.name}</strong> converts to common at ${currency}${formatNumber(point)} exit value</li>`;
+                } else {
+                    return `<li><strong>${sc.name}</strong> takes liquidation preference at all analyzed exit values</li>`;
+                }
+            }).join('');
+            conversionList.innerHTML = conversionItems || '<li>No preferred shares in cap table</li>';
+
+            // Render MOIC table
+            renderMOICTable(exitValues, distributions, shareClasses, currency);
+
+            // Render My Investment section
+            renderMyInvestment(exitValues, distributions, shareClasses, currency);
+
+            // Render charts
+            renderCharts();
+        }
+
+        function renderMOICTable(exitValues, distributions, shareClasses, currency) {
+            const moicHead = document.getElementById('moicHead');
+            const moicBody = document.getElementById('moicBody');
+
+            moicHead.innerHTML = `
+                <tr>
+                    <th>Share Class</th>
+                    ${exitValues.map(v => `<th>${currency}${formatNumber(v)}</th>`).join('')}
+                </tr>
+            `;
+
+            // Only show MOIC for preferred classes (they have invested capital)
+            const preferredClasses = shareClasses.filter(sc => sc.type === 'preferred');
+
+            let moicRows = preferredClasses.map(sc => {
+                const invested = sc.shares * sc.issuePrice;
+                const moicData = exitValues.map((_, i) => {
+                    const proceeds = distributions[sc.id][i];
+                    const moic = invested > 0 ? (proceeds / invested).toFixed(2) : '0.00';
+                    return `<td>${moic}x</td>`;
+                });
+
+                return `
+                    <tr>
+                        <td>${sc.name}</td>
+                        ${moicData.join('')}
+                    </tr>
+                `;
+            });
+
+            if (moicRows.length === 0) {
+                moicRows = [`<tr><td colspan="${exitValues.length + 1}" style="text-align: center; color: #718096;">No preferred classes to display MOIC</td></tr>`];
+            }
+
+            moicBody.innerHTML = moicRows.join('');
+        }
+
+        function renderMyInvestment(exitValues, distributions, shareClasses, currency) {
+            const section = document.getElementById('myInvestmentSection');
+            const thead = document.getElementById('myInvestmentHead');
+            const tbody = document.getElementById('myInvestmentBody');
+
+            // Check if user has any shares
+            const hasMyShares = shareClasses.some(sc => sc.myShares > 0);
+
+            if (!hasMyShares) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+
+            thead.innerHTML = `
+                <tr>
+                    <th>My Holdings</th>
+                    ${exitValues.map(v => `<th>${currency}${formatNumber(v)}</th>`).join('')}
+                </tr>
+            `;
+
+            let rows = [];
+            let totalMyInvested = 0;
+            let totalMyProceeds = exitValues.map(() => 0);
+
+            shareClasses.forEach(sc => {
+                if (sc.myShares > 0) {
+                    const myOwnershipRatio = sc.shares > 0 ? sc.myShares / sc.shares : 0;
+                    const myInvested = sc.type === 'preferred' ? sc.myShares * sc.issuePrice : 0;
+                    totalMyInvested += myInvested;
+
+                    const rowData = exitValues.map((_, i) => {
+                        const classProceeds = distributions[sc.id][i];
+                        const myProceeds = classProceeds * myOwnershipRatio;
+                        totalMyProceeds[i] += myProceeds;
+                        return `<td>${currency}${formatNumber(myProceeds)}</td>`;
+                    });
+
+                    rows.push(`
+                        <tr>
+                            <td>${sc.name} (${sc.myShares.toLocaleString()} shares)</td>
+                            ${rowData.join('')}
+                        </tr>
+                    `);
+                }
+            });
+
+            // Total my proceeds row
+            rows.push(`
+                <tr class="highlight-row">
+                    <td><strong>Total My Proceeds</strong></td>
+                    ${totalMyProceeds.map(v => `<td><strong>${currency}${formatNumber(v)}</strong></td>`).join('')}
+                </tr>
+            `);
+
+            // My MOIC row (if invested capital > 0)
+            if (totalMyInvested > 0) {
+                rows.push(`
+                    <tr class="highlight-row">
+                        <td><strong>My MOIC</strong> (invested: ${currency}${formatNumber(totalMyInvested)})</td>
+                        ${totalMyProceeds.map(v => `<td><strong>${(v / totalMyInvested).toFixed(2)}x</strong></td>`).join('')}
+                    </tr>
+                `);
+            }
+
+            tbody.innerHTML = rows.join('');
+        }
+
+        function renderCharts() {
+            const { exitValues, distributions, inputs } = results;
+            const { currency, shareClasses } = inputs;
+
+            // Colors for charts
+            const colors = [
+                '#3182ce', '#e53e3e', '#38a169', '#d69e2e', '#805ad5',
+                '#dd6b20', '#319795', '#d53f8c', '#718096', '#2b6cb0'
+            ];
+
+            // Destroy existing charts
+            if (proceedsChart) proceedsChart.destroy();
+            if (multipleChart) multipleChart.destroy();
+
+            // Proceeds chart
+            const proceedsCtx = document.getElementById('proceedsChart').getContext('2d');
+            const proceedsDatasets = [];
+
+            shareClasses.forEach((sc, idx) => {
+                proceedsDatasets.push({
+                    label: sc.name || 'Unnamed',
+                    data: distributions[sc.id],
+                    borderColor: colors[idx % colors.length],
+                    backgroundColor: colors[idx % colors.length] + '20',
+                    tension: 0.1,
+                    fill: false
+                });
+            });
+
+            proceedsChart = new Chart(proceedsCtx, {
+                type: 'line',
+                data: {
+                    labels: exitValues.map(v => `${currency}${formatNumber(v)}`),
+                    datasets: proceedsDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    return `${context.dataset.label}: ${currency}${formatNumber(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (value) => `${currency}${formatNumber(value)}`
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Multiple chart (preferred only)
+            const multipleCtx = document.getElementById('multipleChart').getContext('2d');
+            const preferredClasses = shareClasses.filter(sc => sc.type === 'preferred');
+            const multipleDatasets = [];
+
+            preferredClasses.forEach((sc, idx) => {
+                const invested = sc.shares * sc.issuePrice;
+                const multiples = distributions[sc.id].map(d => invested > 0 ? d / invested : 0);
+
+                multipleDatasets.push({
+                    label: sc.name || 'Unnamed',
+                    data: multiples,
+                    borderColor: colors[idx % colors.length],
+                    backgroundColor: colors[idx % colors.length] + '20',
+                    tension: 0.1,
+                    fill: false
+                });
+            });
+
+            if (multipleDatasets.length > 0) {
+                multipleChart = new Chart(multipleCtx, {
+                    type: 'line',
+                    data: {
+                        labels: exitValues.map(v => `${currency}${formatNumber(v)}`),
+                        datasets: multipleDatasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => {
+                                        return `${context.dataset.label}: ${context.raw.toFixed(2)}x`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: (value) => `${value.toFixed(1)}x`
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function setDisplayMode(mode) {
+            displayMode = mode;
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(mode === 'total' ? 'total' : 'per'));
+            });
+            displayResults();
+        }
+
+        function formatNumber(num, decimals = 0) {
+            if (Math.abs(num) >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (Math.abs(num) >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toFixed(decimals);
+        }
+
+        function formatCurrency(num, currency, forTable = false) {
+            if (forTable) {
+                // More compact format for table cells
+                if (Math.abs(num) >= 1000000) {
+                    return `${currency}${(num / 1000000).toFixed(2)}M`;
+                } else if (Math.abs(num) >= 1000) {
+                    return `${currency}${(num / 1000).toFixed(1)}K`;
+                }
+                return `${currency}${num.toFixed(0)}`;
+            }
+            // Full format for exports
+            return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
+
+        function exportCSV() {
+            if (!results) return;
+
+            const { exitValues, distributions, inputs } = results;
+            const { currency, shareClasses, carveoutEnabled, carveoutAmount } = inputs;
+
+            let csv = [];
+
+            // Header row
+            csv.push(['Shareholder', ...exitValues.map(v => `${currency}${v}`)].join(','));
+
+            // Carve-out
+            if (carveoutEnabled && carveoutAmount > 0) {
+                csv.push(['Management Carve-out', ...distributions['carveout']].join(','));
+            }
+
+            // Share classes
+            shareClasses.forEach(sc => {
+                csv.push([`"${sc.name}" (${sc.type})`, ...distributions[sc.id]].join(','));
+            });
+
+            // Total
+            const totals = exitValues.map((_, i) => {
+                let total = distributions['carveout'][i];
+                shareClasses.forEach(sc => {
+                    total += distributions[sc.id][i];
+                });
+                return total;
+            });
+            csv.push(['Total Distributed', ...totals].join(','));
+
+            // MOIC section
+            csv.push('');  // Empty row
+            csv.push('MOIC');
+            const preferredClasses = shareClasses.filter(sc => sc.type === 'preferred');
+            preferredClasses.forEach(sc => {
+                const invested = sc.shares * sc.issuePrice;
+                const moics = distributions[sc.id].map(d => invested > 0 ? (d / invested).toFixed(2) + 'x' : '0.00x');
+                csv.push([`"${sc.name}"`, ...moics].join(','));
+            });
+
+            // Download
+            const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'waterfall_analysis.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
