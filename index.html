@@ -463,6 +463,10 @@
             font-size: 16px;
         }
 
+        .action-buttons {
+            margin-bottom: 40px;
+        }
+
         /* Info tooltip */
         .info-icon {
             display: inline-block;
@@ -1161,8 +1165,26 @@
                 `);
             }
 
+            // Sort share classes: preferred by seniority (most senior first), then common, then option pool
+            const sortedClasses = [...shareClasses].sort((a, b) => {
+                // Preferred classes come first, sorted by seniority (lower = more senior = first)
+                if (a.type === 'preferred' && b.type === 'preferred') {
+                    return (a.seniority || 999) - (b.seniority || 999);
+                }
+                if (a.type === 'preferred') return -1;
+                if (b.type === 'preferred') return 1;
+
+                // Among common: option pool comes last
+                const aIsOptionPool = a.isOptionPool || a.name.toLowerCase().includes('option pool');
+                const bIsOptionPool = b.isOptionPool || b.name.toLowerCase().includes('option pool');
+                if (aIsOptionPool && !bIsOptionPool) return 1;
+                if (!aIsOptionPool && bIsOptionPool) return -1;
+
+                return 0;
+            });
+
             // Share class rows
-            shareClasses.forEach(sc => {
+            sortedClasses.forEach(sc => {
                 const isConverted = results.conversions && results.conversions[sc.id];
                 const rowData = exitValues.map((_, i) => {
                     const value = distributions[sc.id][i];
