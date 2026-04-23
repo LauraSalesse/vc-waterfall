@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VC Waterfall Model</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -397,6 +398,163 @@
             display: none;
         }
 
+        /* Landing Page / Method Selection */
+        .method-selection {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 40px 20px;
+        }
+
+        .method-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 350px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .method-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            border-color: #3182ce;
+        }
+
+        .method-card .icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .method-card h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a365d;
+            margin-bottom: 12px;
+        }
+
+        .method-card p {
+            font-size: 14px;
+            color: #718096;
+            line-height: 1.6;
+        }
+
+        /* File Upload Area */
+        .upload-section {
+            margin-bottom: 20px;
+        }
+
+        .upload-area {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f7fafc;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #3182ce;
+            background: #ebf8ff;
+        }
+
+        .upload-area .upload-icon {
+            font-size: 36px;
+            color: #a0aec0;
+            margin-bottom: 12px;
+        }
+
+        .upload-area h4 {
+            font-size: 16px;
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .upload-area p {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .upload-area input[type="file"] {
+            display: none;
+        }
+
+        .uploaded-file {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f0fff4;
+            border-radius: 6px;
+            margin-top: 12px;
+            border: 1px solid #9ae6b4;
+        }
+
+        .uploaded-file .file-icon {
+            font-size: 24px;
+        }
+
+        .uploaded-file .file-info {
+            flex: 1;
+            text-align: left;
+        }
+
+        .uploaded-file .file-name {
+            font-weight: 500;
+            color: #276749;
+        }
+
+        .uploaded-file .file-size {
+            font-size: 12px;
+            color: #68d391;
+        }
+
+        .uploaded-file .remove-file {
+            background: none;
+            border: none;
+            color: #e53e3e;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #4a5568;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            padding: 8px 0;
+        }
+
+        .back-button:hover {
+            color: #2d3748;
+        }
+
+        .parsing-status {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            background: #ebf8ff;
+            border-left: 4px solid #3182ce;
+        }
+
+        .parsing-status.error {
+            background: #fff5f5;
+            border-left-color: #e53e3e;
+        }
+
+        .parsing-status.success {
+            background: #f0fff4;
+            border-left-color: #48bb78;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .form-group {
@@ -491,7 +649,63 @@
         </div>
     </header>
 
-    <div class="container">
+    <!-- Method Selection Landing Page -->
+    <div class="container" id="methodSelection">
+        <div class="method-selection">
+            <div class="method-card" onclick="selectMethod('manual')">
+                <div class="icon">&#9998;</div>
+                <h3>Enter Parameters Manually</h3>
+                <p>Input your cap table, share classes, and waterfall parameters directly into the form.</p>
+            </div>
+            <div class="method-card" onclick="selectMethod('upload')">
+                <div class="icon">&#128196;</div>
+                <h3>Upload Documents</h3>
+                <p>Drop your Shareholder Agreement and Cap Table files to auto-populate the waterfall parameters.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="container hidden" id="uploadSection">
+        <div class="back-button" onclick="goBack()">
+            &#8592; Back to method selection
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Upload Shareholder Agreement</h2>
+            <div class="upload-area" id="shaUploadArea">
+                <div class="upload-icon">&#128196;</div>
+                <h4>Drop your Shareholder Agreement here</h4>
+                <p>or click to browse (PDF, Word, Excel)</p>
+                <input type="file" id="shaFile" accept=".pdf,.doc,.docx,.xlsx,.xls">
+            </div>
+            <div id="shaFileInfo"></div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Upload Cap Table</h2>
+            <div class="upload-area" id="capTableUploadArea">
+                <div class="upload-icon">&#128200;</div>
+                <h4>Drop your Cap Table here</h4>
+                <p>or click to browse (Excel, CSV)</p>
+                <input type="file" id="capTableFile" accept=".xlsx,.xls,.csv">
+            </div>
+            <div id="capTableFileInfo"></div>
+        </div>
+
+        <div id="parsingStatus"></div>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary btn-calculate" onclick="parseUploadedFiles()" id="parseButton" disabled>Parse Documents</button>
+        </div>
+    </div>
+
+    <!-- Manual Input Section -->
+    <div class="container hidden" id="manualSection">
+        <div class="back-button" onclick="goBack()">
+            &#8592; Back to method selection
+        </div>
+
         <!-- General Settings -->
         <div class="section">
             <h2 class="section-title">General Settings</h2>
@@ -597,7 +811,10 @@
         <div class="action-buttons">
             <button class="btn btn-primary btn-calculate" onclick="calculateWaterfall()">Calculate Waterfall</button>
         </div>
+    </div>
 
+    <!-- Results Section (outside manual section so it shows for both methods) -->
+    <div class="container">
         <!-- Results Section -->
         <div class="section hidden" id="resultsSection">
             <div class="results-header">
@@ -607,7 +824,8 @@
                         <button class="toggle-btn active" onclick="setDisplayMode('total')">Total Proceeds</button>
                         <button class="toggle-btn" onclick="setDisplayMode('perShare')">Per Share</button>
                     </div>
-                    <button class="btn btn-success" onclick="exportCSV()">Export CSV</button>
+                    <button class="btn btn-success" onclick="exportExcel()">Export Excel</button>
+                    <button class="btn btn-secondary" onclick="exportCSV()">Export CSV</button>
                 </div>
             </div>
 
@@ -668,18 +886,229 @@
         let displayMode = 'total';
         let proceedsChart = null;
         let multipleChart = null;
+        let uploadedFiles = { sha: null, capTable: null };
 
-        // Initialize with default share classes
+        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            addShareClass('Common', 8000000, 'common', { myShares: 0 });
-            addShareClass('Option Pool (Allocated)', 1000000, 'common', { myShares: 0, isOptionPool: true });
-            addShareClass('Series A', 2000000, 'preferred', { issuePrice: 5, seniority: 2, myShares: 0 });
-            addShareClass('Series B', 1500000, 'preferred', { issuePrice: 10, seniority: 1, myShares: 0 });
-
+            // Set up carve-out checkbox
             document.getElementById('carveoutEnabled').addEventListener('change', (e) => {
                 document.getElementById('carveoutRow').style.display = e.target.checked ? 'flex' : 'none';
             });
+
+            // Set up file upload areas
+            setupUploadArea('shaUploadArea', 'shaFile', 'sha');
+            setupUploadArea('capTableUploadArea', 'capTableFile', 'capTable');
         });
+
+        // Method selection functions
+        function selectMethod(method) {
+            document.getElementById('methodSelection').classList.add('hidden');
+
+            if (method === 'manual') {
+                document.getElementById('manualSection').classList.remove('hidden');
+                // Initialize with default share classes if empty
+                if (shareClasses.length === 0) {
+                    addShareClass('Common', 8000000, 'common', { myShares: 0 });
+                    addShareClass('Option Pool (Allocated)', 1000000, 'common', { myShares: 0, isOptionPool: true });
+                    addShareClass('Series A', 2000000, 'preferred', { issuePrice: 5, seniority: 2, myShares: 0 });
+                    addShareClass('Series B', 1500000, 'preferred', { issuePrice: 10, seniority: 1, myShares: 0 });
+                }
+            } else if (method === 'upload') {
+                document.getElementById('uploadSection').classList.remove('hidden');
+            }
+        }
+
+        function goBack() {
+            document.getElementById('manualSection').classList.add('hidden');
+            document.getElementById('uploadSection').classList.add('hidden');
+            document.getElementById('methodSelection').classList.remove('hidden');
+        }
+
+        // File upload handling
+        function setupUploadArea(areaId, inputId, fileType) {
+            const area = document.getElementById(areaId);
+            const input = document.getElementById(inputId);
+
+            area.addEventListener('click', () => input.click());
+
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.classList.add('dragover');
+            });
+
+            area.addEventListener('dragleave', () => {
+                area.classList.remove('dragover');
+            });
+
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) handleFileSelect(file, fileType);
+            });
+
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) handleFileSelect(file, fileType);
+            });
+        }
+
+        function handleFileSelect(file, fileType) {
+            uploadedFiles[fileType] = file;
+
+            const infoDiv = document.getElementById(fileType === 'sha' ? 'shaFileInfo' : 'capTableFileInfo');
+            const fileSize = (file.size / 1024).toFixed(1);
+
+            infoDiv.innerHTML = `
+                <div class="uploaded-file">
+                    <span class="file-icon">&#128196;</span>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${fileSize} KB</div>
+                    </div>
+                    <button class="remove-file" onclick="removeFile('${fileType}')">&times;</button>
+                </div>
+            `;
+
+            updateParseButton();
+        }
+
+        function removeFile(fileType) {
+            uploadedFiles[fileType] = null;
+            const infoDiv = document.getElementById(fileType === 'sha' ? 'shaFileInfo' : 'capTableFileInfo');
+            infoDiv.innerHTML = '';
+            const input = document.getElementById(fileType === 'sha' ? 'shaFile' : 'capTableFile');
+            input.value = '';
+            updateParseButton();
+        }
+
+        function updateParseButton() {
+            const parseButton = document.getElementById('parseButton');
+            // Enable if at least cap table is uploaded
+            parseButton.disabled = !uploadedFiles.capTable;
+        }
+
+        async function parseUploadedFiles() {
+            const statusDiv = document.getElementById('parsingStatus');
+            statusDiv.innerHTML = '<div class="parsing-status">Parsing documents... Please wait.</div>';
+
+            try {
+                // Parse cap table (Excel/CSV)
+                if (uploadedFiles.capTable) {
+                    await parseCapTable(uploadedFiles.capTable);
+                }
+
+                // Show success and switch to manual mode for review
+                statusDiv.innerHTML = '<div class="parsing-status success">Documents parsed successfully! Review and adjust the values below.</div>';
+
+                // Hide upload section, show manual section
+                setTimeout(() => {
+                    document.getElementById('uploadSection').classList.add('hidden');
+                    document.getElementById('manualSection').classList.remove('hidden');
+                    // Remove back button since we're showing parsed data
+                    const backBtn = document.querySelector('#manualSection .back-button');
+                    if (backBtn) backBtn.style.display = 'none';
+                }, 1000);
+
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="parsing-status error">Error parsing documents: ${error.message}</div>`;
+            }
+        }
+
+        async function parseCapTable(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+                        // Clear existing share classes
+                        shareClasses = [];
+                        shareClassCounter = 0;
+
+                        // Try to parse the cap table structure
+                        // Look for common patterns: Class/Type, Shares, Price, etc.
+                        let headerRow = -1;
+                        let classCol = -1, sharesCol = -1, typeCol = -1, priceCol = -1;
+
+                        // Find header row
+                        for (let i = 0; i < Math.min(20, jsonData.length); i++) {
+                            const row = jsonData[i];
+                            if (!row) continue;
+
+                            for (let j = 0; j < row.length; j++) {
+                                const cell = String(row[j] || '').toLowerCase();
+                                if (cell.includes('class') || cell.includes('shareholder') || cell.includes('investor')) {
+                                    headerRow = i;
+                                    classCol = j;
+                                }
+                                if (cell.includes('share') && !cell.includes('shareholder') && !cell.includes('price')) {
+                                    sharesCol = j;
+                                }
+                                if (cell.includes('type') || cell.includes('preferred') || cell.includes('common')) {
+                                    if (typeCol === -1) typeCol = j;
+                                }
+                                if (cell.includes('price') || cell.includes('pps')) {
+                                    priceCol = j;
+                                }
+                            }
+                            if (headerRow >= 0) break;
+                        }
+
+                        // Parse data rows
+                        if (headerRow >= 0) {
+                            for (let i = headerRow + 1; i < jsonData.length; i++) {
+                                const row = jsonData[i];
+                                if (!row || !row[classCol]) continue;
+
+                                const name = String(row[classCol] || '').trim();
+                                if (!name || name.toLowerCase().includes('total')) continue;
+
+                                const shares = parseFloat(row[sharesCol]) || 0;
+                                if (shares === 0) continue;
+
+                                // Determine type
+                                let type = 'common';
+                                const rowStr = row.join(' ').toLowerCase();
+                                if (rowStr.includes('preferred') || rowStr.includes('series') || rowStr.includes('pref')) {
+                                    type = 'preferred';
+                                }
+                                if (rowStr.includes('option') || rowStr.includes('pool') || rowStr.includes('esop')) {
+                                    type = 'common';
+                                }
+
+                                const options = { myShares: 0 };
+                                if (type === 'preferred') {
+                                    options.issuePrice = parseFloat(row[priceCol]) || 1;
+                                    options.seniority = shareClasses.filter(sc => sc.type === 'preferred').length + 1;
+                                }
+                                if (rowStr.includes('option') || rowStr.includes('pool') || rowStr.includes('esop')) {
+                                    options.isOptionPool = true;
+                                }
+
+                                addShareClass(name, shares, type, options);
+                            }
+                        }
+
+                        // If no classes were parsed, add defaults
+                        if (shareClasses.length === 0) {
+                            throw new Error('Could not parse cap table structure. Please check the file format.');
+                        }
+
+                        resolve();
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
 
         function addShareClass(name = '', shares = '', type = 'common', options = {}) {
             const id = ++shareClassCounter;
@@ -1545,6 +1974,316 @@
             a.download = 'waterfall_analysis.csv';
             a.click();
             URL.revokeObjectURL(url);
+        }
+
+        function exportExcel() {
+            if (!results) return;
+
+            const { exitValues, distributions, inputs, conversions, conversionPoints } = results;
+            const { currency, shareClasses, carveoutEnabled, carveoutAmount, legalFees, bankerFees } = inputs;
+            const preferredClasses = shareClasses.filter(sc => sc.type === 'preferred');
+            const commonClasses = shareClasses.filter(sc => sc.type === 'common');
+
+            // Sort preferred by seniority (most senior first = lowest number)
+            const sortedPreferred = [...preferredClasses].sort((a, b) => (a.seniority || 999) - (b.seniority || 999));
+
+            // Calculate totals
+            const totalShares = shareClasses.reduce((sum, sc) => sum + sc.shares, 0);
+            const totalCommonShares = commonClasses.reduce((sum, sc) => sum + sc.shares, 0);
+            const totalPrefStack = sortedPreferred.reduce((sum, sc) => sum + (sc.shares * sc.issuePrice * (sc.liquidationMultiple || 1)), 0);
+
+            // Build worksheet data
+            const wsData = [];
+            const exitColStart = 4; // Column E (0-indexed: 4)
+
+            // Helper to create a row with exit values
+            const makeExitRow = (label, values, section = '', step = '') => {
+                const row = ['', section, step, label];
+                values.forEach(v => row.push(v));
+                return row;
+            };
+
+            // === SECTION 0: Specific Parameters ===
+            wsData.push(['', '0', '', 'Specific parameters']);
+            wsData.push(['', '1', '', 'Summary']);
+            wsData.push(['', '2', '', 'Calc']);
+            wsData.push([]);
+            wsData.push([]);
+            wsData.push(['', '0', '', 'Specific parameters:']);
+            wsData.push([]);
+            wsData.push(['', '', '', 'Management carve-out', carveoutAmount, carveoutEnabled ? '' : 'Disabled']);
+            wsData.push(['', '', '', 'Pari-Passu', sortedPreferred.some(sc => sc.pariPassu) ? 'Yes' : 'No']);
+            wsData.push([]);
+            wsData.push([]);
+            wsData.push([]);
+            wsData.push([]);
+
+            // === SECTION 1: Summary ===
+            wsData.push(['', '1', '', 'Summary']);
+            wsData.push([]);
+
+            // Header row with exit values
+            const summaryHeader = ['', '', '', 'Net proceeds by current cap table'];
+            exitValues.forEach(v => summaryHeader.push(v));
+            wsData.push(summaryHeader);
+
+            // Legal fees row
+            wsData.push(makeExitRow('Legal fees', exitValues.map(() => legalFees)));
+
+            // Banker fees row
+            wsData.push(makeExitRow('Banker fees', exitValues.map(() => bankerFees)));
+
+            // Share class distributions (sorted: preferred by seniority, then common)
+            const sortedClasses = [...sortedPreferred, ...commonClasses.filter(sc => !sc.isOptionPool && !sc.name.toLowerCase().includes('option')),
+                                   ...commonClasses.filter(sc => sc.isOptionPool || sc.name.toLowerCase().includes('option'))];
+
+            sortedClasses.forEach(sc => {
+                const label = sc.name + (sc.type === 'common' && (sc.isOptionPool || sc.name.toLowerCase().includes('option')) ? ' (net)' : '');
+                wsData.push(makeExitRow(label, distributions[sc.id]));
+            });
+
+            // Carve-out row
+            wsData.push(makeExitRow('Management carve-out', distributions['carveout']));
+
+            // Total distributed
+            const totalDistributed = exitValues.map((_, i) => {
+                let total = distributions['carveout'][i];
+                shareClasses.forEach(sc => total += distributions[sc.id][i]);
+                return total;
+            });
+            wsData.push(makeExitRow('Distributed proceeds', totalDistributed));
+
+            // Validation row
+            const validation = exitValues.map((ev, i) => {
+                const net = Math.max(0, ev - legalFees - bankerFees);
+                return Math.abs(totalDistributed[i] - net) < 1;
+            });
+            wsData.push(makeExitRow('', validation));
+
+            wsData.push([]);
+            wsData.push([]);
+
+            // === SECTION 2: Calc ===
+            wsData.push(['', '2', '', 'Calc']);
+            wsData.push([]);
+
+            // Investment details table
+            wsData.push(['', '', '', 'Investment with LP', '', '', '', 'Shares', 'PPS', 'Pref stack']);
+            sortedPreferred.forEach(sc => {
+                const prefStack = sc.shares * sc.issuePrice * (sc.liquidationMultiple || 1);
+                wsData.push(['', '', '', sc.name, '', '', '', sc.shares, sc.issuePrice, prefStack]);
+            });
+            wsData.push(['', '', '', 'Total pref', '', '', '', '', '', totalPrefStack]);
+
+            wsData.push([]);
+            wsData.push([]);
+
+            // Cap table
+            wsData.push(['', '', '', '', 'Investment', '', '', 'Number of shares/options', '', '', '', '', 'FD/conv. shares', 'Ownership']);
+            wsData.push(['', '', '', 'Cap Table', 'Prefs', '', '']);
+
+            sortedPreferred.forEach(sc => {
+                const investment = sc.shares * sc.issuePrice;
+                const ownership = sc.shares / totalShares;
+                wsData.push(['', '', '', sc.name, investment, '', '', sc.shares, '', '', '', '', sc.shares, ownership]);
+            });
+
+            commonClasses.forEach(sc => {
+                const ownership = sc.shares / totalShares;
+                const isOptions = sc.isOptionPool || sc.name.toLowerCase().includes('option');
+                wsData.push(['', '', '', sc.name, '', '', '', '', '', '', isOptions ? '' : sc.shares, isOptions ? sc.shares : '', sc.shares, ownership]);
+            });
+
+            wsData.push(['', '', '', 'Total', sortedPreferred.reduce((sum, sc) => sum + sc.shares * sc.issuePrice, 0), '', '', '', '', '', '', '', totalShares, 1]);
+
+            wsData.push([]);
+            wsData.push([]);
+            wsData.push([]);
+
+            // === Detailed calculations for each exit value ===
+
+            // Exit value header
+            const exitHeader = ['', '', '', 'Equity Value on Exit'];
+            exitValues.forEach(v => exitHeader.push(v));
+            wsData.push(exitHeader);
+            wsData.push([]);
+
+            // Legal and banker fees
+            wsData.push(makeExitRow('Legal fees', exitValues.map(() => legalFees)));
+            wsData.push(makeExitRow('Banker fees', exitValues.map(() => bankerFees)));
+            wsData.push([]);
+
+            // Remaining post fees
+            const remainingPostFees = exitValues.map(v => Math.max(0, v - legalFees - bankerFees));
+            wsData.push(makeExitRow('Remaining post legal and banker fees', remainingPostFees));
+            wsData.push([]);
+
+            // Management carve-out
+            wsData.push(makeExitRow('Management carve-out', distributions['carveout'], '', '0)'));
+            wsData.push([]);
+
+            // Remaining after carve-out
+            const remainingAfterCarveout = exitValues.map((_, i) => remainingPostFees[i] - distributions['carveout'][i]);
+
+            // Option conversion calculations (simplified)
+            wsData.push(['', '', 'I)', 'Option conversion calculations']);
+            const valuePerShareFD = remainingAfterCarveout.map(r => r / totalShares);
+            wsData.push(makeExitRow('Value per share (fully diluted)', valuePerShareFD));
+
+            const optionClasses = commonClasses.filter(sc => sc.isOptionPool || sc.name.toLowerCase().includes('option'));
+            const totalOptions = optionClasses.reduce((sum, sc) => sum + sc.shares, 0);
+            wsData.push(makeExitRow('Number of options in the money', exitValues.map(() => totalOptions)));
+            wsData.push(makeExitRow('Proceeds from exercising options', exitValues.map(() => 0)));
+            wsData.push([]);
+
+            // Preferred class waterfall calculations
+            let stepNumber = 2;
+            const romanNumerals = ['II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+
+            sortedPreferred.forEach((sc, idx) => {
+                const liqPref = sc.shares * sc.issuePrice * (sc.liquidationMultiple || 1);
+                const numeral = romanNumerals[idx] || (idx + 2).toString();
+
+                // Remaining proceeds available for this class
+                const remainingForClass = exitValues.map((_, i) => {
+                    // Calculate remaining after higher priority classes took their liq pref
+                    let remaining = remainingAfterCarveout[i];
+                    sortedPreferred.slice(0, idx).forEach(higherSc => {
+                        if (!conversions[higherSc.id][i]) {
+                            // Higher class took liq pref
+                            remaining -= Math.min(remaining, higherSc.shares * higherSc.issuePrice * (higherSc.liquidationMultiple || 1));
+                        }
+                    });
+                    return Math.max(0, remaining);
+                });
+
+                wsData.push(makeExitRow(sc.name, remainingForClass, '', numeral + ')'));
+
+                // Liquidation preference
+                const liqPrefPaid = remainingForClass.map(r => Math.min(r, liqPref));
+                wsData.push(makeExitRow('Liquidation preference', liqPrefPaid));
+
+                // Proceeds if not converted
+                const proceedsNotConverted = distributions[sc.id].map((d, i) => conversions[sc.id][i] ? 0 : d);
+                wsData.push(makeExitRow('Proceeds to ' + sc.name + ' if not converted', exitValues.map((_, i) => conversions[sc.id][i] ? liqPrefPaid[i] : distributions[sc.id][i])));
+
+                // Proceeds if converted
+                const proceedsConverted = distributions[sc.id].map((d, i) => conversions[sc.id][i] ? d : 0);
+                wsData.push(makeExitRow('Proceeds to ' + sc.name + ' if converted', proceedsConverted));
+
+                // Participating prefs (simplified - assuming non-participating)
+                wsData.push(makeExitRow('Participating prefs - amount', exitValues.map(() => 0)));
+
+                // Final proceeds
+                wsData.push(makeExitRow('Proceeds to ' + sc.name + ' via SHA', distributions[sc.id]));
+                wsData.push([]);
+            });
+
+            // Remaining proceeds post all LP
+            const remainingPostLP = exitValues.map((_, i) => {
+                let remaining = remainingAfterCarveout[i];
+                sortedPreferred.forEach(sc => {
+                    if (!conversions[sc.id][i]) {
+                        remaining -= Math.min(remaining, sc.shares * sc.issuePrice * (sc.liquidationMultiple || 1));
+                    }
+                });
+                return Math.max(0, remaining);
+            });
+
+            const lastNumeral = romanNumerals[sortedPreferred.length] || (sortedPreferred.length + 2).toString();
+            wsData.push(makeExitRow('Remaining proceeds post all LP', remainingPostLP, '', lastNumeral + ')'));
+            wsData.push([]);
+
+            // Shares payable on pro-rata basis
+            wsData.push(['', '', '', 'Number of shares payable on a pro-rata basis']);
+            commonClasses.filter(sc => !sc.isOptionPool && !sc.name.toLowerCase().includes('option')).forEach(sc => {
+                wsData.push(makeExitRow(sc.name, exitValues.map(() => sc.shares)));
+            });
+            optionClasses.forEach(sc => {
+                wsData.push(makeExitRow('Options', exitValues.map(() => sc.shares)));
+            });
+
+            // As-if-converted shares
+            sortedPreferred.forEach(sc => {
+                wsData.push(makeExitRow(sc.name, exitValues.map(() => sc.shares), 'As if converted'));
+            });
+
+            wsData.push(makeExitRow('Total FD shares payable on a pro-rata basis', exitValues.map(() => totalShares)));
+
+            // Value per share
+            const valuePerShareProRata = remainingPostLP.map(r => r / totalShares);
+            wsData.push(makeExitRow('Value per share payable on a pro-rata basis', valuePerShareProRata));
+            wsData.push([]);
+
+            // Proceeds distributed to each class
+            wsData.push(['', '', '', 'Proceeds to shares distributed']);
+            shareClasses.forEach(sc => {
+                const label = sc.type === 'common' && (sc.isOptionPool || sc.name.toLowerCase().includes('option')) ? 'Options' : sc.name;
+                wsData.push(makeExitRow(label, distributions[sc.id]));
+            });
+
+            // Total gross proceeds
+            wsData.push(makeExitRow('Total gross proceeds to shares', totalDistributed.map((t, i) => t - distributions['carveout'][i])));
+            wsData.push([]);
+            wsData.push([]);
+
+            // === Consolidation Section ===
+            wsData.push(['', '', 'Consolidation']);
+            wsData.push([]);
+            wsData.push(exitHeader);
+            wsData.push([]);
+
+            wsData.push(['', '', '', 'Gross proceeds by instrument:']);
+
+            // Preferred - pref vs converted
+            sortedPreferred.forEach(sc => {
+                const prefProceeds = distributions[sc.id].map((d, i) => conversions[sc.id][i] ? 0 : d);
+                const convProceeds = distributions[sc.id].map((d, i) => conversions[sc.id][i] ? d : 0);
+                wsData.push(makeExitRow(sc.name, prefProceeds, 'Pref'));
+                wsData.push(makeExitRow(sc.name, convProceeds, 'Pref as if converted'));
+            });
+
+            // Common
+            commonClasses.forEach(sc => {
+                const label = sc.isOptionPool || sc.name.toLowerCase().includes('option') ? 'Allocated options' : sc.name;
+                wsData.push(makeExitRow(label, distributions[sc.id]));
+            });
+
+            // Distributed proceeds
+            wsData.push(makeExitRow('Distributed proceeds', remainingPostFees));
+
+            // Delta
+            const delta = exitValues.map((ev, i) => ev - totalDistributed[i] - legalFees - bankerFees);
+            wsData.push(makeExitRow('Delta EqV to distributed proceeds', delta));
+            wsData.push([]);
+
+            // Net proceeds by current cap table
+            wsData.push(['', '', '', 'Net proceeds by current cap table']);
+            sortedClasses.forEach(sc => {
+                wsData.push(makeExitRow(sc.name, distributions[sc.id]));
+            });
+            wsData.push(makeExitRow('Distributed proceeds', totalDistributed));
+
+            // Create workbook and worksheet
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            // Set column widths
+            ws['!cols'] = [
+                { wch: 3 },  // A
+                { wch: 5 },  // B
+                { wch: 18 }, // C
+                { wch: 35 }, // D
+            ];
+            // Add width for exit value columns
+            for (let i = 0; i < exitValues.length; i++) {
+                ws['!cols'].push({ wch: 15 });
+            }
+
+            XLSX.utils.book_append_sheet(wb, ws, 'Waterfall Analysis');
+
+            // Download
+            XLSX.writeFile(wb, 'waterfall_analysis.xlsx');
         }
     </script>
 </body>
